@@ -5,9 +5,13 @@
 
    Protocole (objets envoyés par DataConnection, sérialisation PeerJS) :
      client -> hôte : hello{nom,couleur,v} · cmd{nom,args,rid} · pos{x,z,cap,mode}
-                      ping{t} · pong{t}
+                      ping{t} · pong{t} · radio{nom,url,favicon}
      hôte -> client : bienvenue{id,code} · snap{s,p?} · av{l:[{id,nom,couleur,x,z,cap,mode,ping}]}
                       res{rid,ok,msg} · info{titre,txt,c} · plein{} · bye{} · ping{t} · pong{t}
+                      radio{de,nom,url,favicon}
+   radio = « Partager au studio » (radio.js) : purement cosmétique, hors de S. L'hôte
+   nettoie (https seulement, longueurs bornées, cadence limitée) puis relaie aux autres ;
+   le destinataire voit un toast avec « Écouter aussi », jamais de lecture automatique.
    snap.s = snapshot() de la sim (chaîne JSON). Débit : un instantané complet pèse
    10 à 20 Ko, dont la moitié de journal et de file d'effets. Les envois réguliers
    sont donc PARTIELS (p:1) : S.journal n'y figure que s'il a changé, S.fx ne
@@ -25,6 +29,7 @@ const PREFIXE="studio-";
 const MAX_JOUEURS=4;
 const PERIODE_SNAP=200, PERIODE_SNAP_MIN=50, PERIODE_AV=100, PERIODE_PING=2000, PERIODE_POS=100;
 const SILENCE_MAX=15000, HELLO_MAX=10000;   /* au-delà : pair considéré comme parti */
+const RADIO_MIN_MS=4000;                    /* un partage de radio toutes les 4 s au plus, par joueur */
 const COMMANDES=["accepter","refuser","affecter","retirer","toggleSup","livrer","abandonner","embaucher",
   "licencier","augmenter","former","acheter","relance","auto","vitesse","pause","continuer","nouvellePartie"];
 
@@ -54,6 +59,21 @@ function nettoieNom(n){
 }
 function nettoieCouleur(c){ return /^#[0-9a-f]{6}$/i.test(String(c))?String(c):"#7da383"; }
 function nombre(v,b){ v=+v; return isFinite(v)?Math.max(-b,Math.min(b,v)):0; }
+/* partage de radio : nom propre, adresses https uniquement, longueurs bornées */
+function urlHttps(u,max){
+  if(typeof u!=="string"||!u||u.length>max||/[\s"'<>\\]/.test(u)) return "";
+  let p; try{ p=new URL(u); }catch(e){ return ""; }
+  if(p.protocol!=="https:"||!p.hostname||p.username||p.password) return "";
+  return p.href.length<=max?p.href:"";
+}
+function nettoieRadio(d){
+  if(!d||typeof d!=="object") return null;
+  const nom=String(typeof d.nom==="string"?d.nom:"").replace(/[\u0000-\u001f\u007f<>]/g,"").replace(/[\u2013\u2014]/g,"-").trim().slice(0,80);
+  const url=urlHttps(d.url,500);
+  if(!nom||!url) return null;
+  return {nom:nom,url:url,favicon:urlHttps(d.favicon,400)};
+}
+function radioRecu(m){ if(window.Radio&&Radio.recu) try{ Radio.recu(m); }catch(e){ console.error(e); } }
 function envoyer(conn,msg){ try{ if(conn&&conn.open) conn.send(msg); }catch(e){} }
 function diffuser(msg){ invites.forEach(j=>{ if(j.hello) envoyer(j.conn,msg); }); }
 function toast(t,x,c){ if(window.UI&&UI.toast) UI.toast(t,x,c); }
@@ -199,6 +219,17 @@ function recuHote(id,d){
       break;
     case "ping": envoyer(j.conn,{type:"pong",t:d.t}); break;
     case "pong": if(typeof d.t==="number") j.ping=Math.max(0,Math.round(performance.now()-d.t)); break;
+    case "radio":{
+      if(!j.hello) return;
+      const now=performance.now();
+      if(j.tRadio&&now-j.tRadio<RADIO_MIN_MS) return;
+      const r=nettoieRadio(d); if(!r) return;
+      j.tRadio=now;
+      const m={type:"radio",de:j.nom,nom:r.nom,url:r.url,favicon:r.favicon};
+      invites.forEach((k,kid)=>{ if(k.hello&&kid!==id) envoyer(k.conn,m); });
+      radioRecu(m);
+      break;
+    }
   }
 }
 
@@ -325,6 +356,7 @@ function recuClient(d){
     }
     case "av": if(Array.isArray(d.l)) avDistants=d.l.filter(a=>a&&typeof a.id==="string").slice(0,MAX_JOUEURS); break;
     case "info": toast(String(d.titre||"Coop"),String(d.txt||""),d.c||""); break;
+    case "radio":{ const r=nettoieRadio(d); if(r) radioRecu({de:nettoieNom(d.de),nom:r.nom,url:r.url,favicon:r.favicon}); break; }
     case "ping": envoyer(connHote,{type:"pong",t:d.t}); break;
     case "pong": if(typeof d.t==="number") pingHote=Math.max(0,Math.round(performance.now()-d.t)); break;
     case "plein":
@@ -433,6 +465,23 @@ setInterval(()=>{
   tick(dtms);
 },500);
 
+/* « Partager au studio » : envoie la station écoutée aux autres joueurs */
+let tRadioEnvoi=0;
+function partagerRadio(st){
+  if(mode!=="hote"&&mode!=="client") return {ok:false,msg:"Le partage marche en coop seulement."};
+  const r=nettoieRadio(st);
+  if(!r) return {ok:false,msg:"Cette station ne peut pas être partagée (flux https uniquement)."};
+  const now=performance.now();
+  if(tRadioEnvoi&&now-tRadioEnvoi<RADIO_MIN_MS) return {ok:false,msg:"Doucement sur le bouton, DJ."};
+  tRadioEnvoi=now;
+  if(mode==="hote") diffuser({type:"radio",de:profil.nom,nom:r.nom,url:r.url,favicon:r.favicon});
+  else{
+    if(!connHote||!connHote.open) return {ok:false,msg:"Pas connecté à l'hôte."};
+    envoyer(connHote,{type:"radio",nom:r.nom,url:r.url,favicon:r.favicon});
+  }
+  return {ok:true};
+}
+
 function majPos(p){ if(p) maPos={x:+p.x||0,z:+p.z||0,cap:+p.cap||0,mode:p.mode==="marche"?"marche":"idle"}; }
 
 /* liste pour World.majAvatars (et pour la diffusion par l'hôte) */
@@ -496,7 +545,7 @@ function lien(){
 }
 
 return {
-  dispo, etatLib, solo, heberger, rejoindre, quitter, action, tick, interpoler, majPos, avatars, joueurs, lien,
+  dispo, etatLib, solo, heberger, rejoindre, quitter, action, tick, interpoler, majPos, avatars, joueurs, lien, partagerRadio, nettoieRadio,
   autorite:()=>mode==="solo"||mode==="hote",
   estFichier:()=>location.protocol==="file:",
   get mode(){return mode}, get monId(){return monId}, get code(){return code},

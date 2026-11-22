@@ -169,7 +169,7 @@ function clavier(){
     if(tag==="INPUT"||tag==="TEXTAREA"||(t&&t.isContentEditable))return;
     const k=String(e.key||"").toLowerCase();
     if((e.ctrlKey||e.metaKey)&&k==="s"){ e.preventDefault(); UI.sauverPartie(); return; }
-    if(k==="escape"){ UI.echap(); return; }
+    if(k==="escape"){ if(UI.echap()) return; if(window.Radio&&Radio.echap()) return; return; }
     if(UI.menuOuvert()||Net.mode==="menu"||Net.mode==="connexion")return;
     if(e.ctrlKey||e.metaKey||e.altKey)return;
     const d=dirDe(e);
@@ -178,6 +178,7 @@ function clavier(){
     if(e.code==="Space"){ e.preventDefault(); const s=S.session||S; Net.action("pause",!(s.pause||!s.vitesse)); }
     else if(k==="e"){ UI.basculerTableau(); }
     else if(k==="v"){ vueSuivante(); }
+    else if(k==="r"){ if(window.Radio) Radio.basculer(); }
     else{
       const n={Digit1:1,Digit2:2,Digit3:3,Numpad1:1,Numpad2:2,Numpad3:3}[e.code];
       if(n) Net.action("vitesse",n);

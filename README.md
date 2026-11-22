@@ -20,7 +20,7 @@ Le plus simple, gratuit : **GitHub Pages**.
 
 1. Crée un compte sur [github.com](https://github.com) si tu n'en as pas.
 2. Clique sur **New repository**, donne-lui un nom (par exemple `studio`), coche **Public**, puis **Create repository**.
-3. Sur la page du dépôt, clique sur **uploading an existing file** (ou **Add file > Upload files**). Ouvre le dossier du jeu sur ton ordinateur, sélectionne les fichiers `index.html`, `three.min.js`, `sim.js`, `world.js`, `ui.js`, `net.js` et `main.js` (le `README.md` aussi si tu veux), glisse-les dans la page, attends que la barre de chargement finisse, puis clique sur **Commit changes** en bas.
+3. Sur la page du dépôt, clique sur **uploading an existing file** (ou **Add file > Upload files**). Ouvre le dossier du jeu sur ton ordinateur, sélectionne les fichiers `index.html`, `three.min.js`, `sim.js`, `world.js`, `ui.js`, `net.js`, `radio.js` et `main.js` (le `README.md` aussi si tu veux), glisse-les dans la page, attends que la barre de chargement finisse, puis clique sur **Commit changes** en bas.
    - N'envoie **pas** le dossier `tests` : il ne sert pas au jeu (et son sous-dossier `node_modules` contient des milliers de fichiers que GitHub refusera).
    - `index.html` doit être à la racine du dépôt (pas dans un sous-dossier), sinon la page reste blanche.
 4. Va dans **Settings > Pages**. Dans **Build and deployment**, choisis **Deploy from a branch**, branche **main**, dossier **/ (root)**, puis **Save**.
@@ -55,10 +55,20 @@ Astuce : si tu ouvres le jeu depuis le fichier `index.html` (sans l'avoir mis en
 | Pause | `Espace` |
 | Vitesse normale, ×2, ×4 | `1`, `2`, `3` |
 | Changer de vue | `V` |
+| Radio du studio (ouvrir / fermer) | `R` |
 | Sauvegarder | `Ctrl+S` |
 | Faire marcher ton avatar | clic sur le sol, ou `ZQSD` / `WASD` / flèches |
 | Pivoter, zoomer, décaler la caméra | glisser, molette, clic droit |
 | Ouvrir la fiche d'un collaborateur | clic sur le personnage |
+
+## Radio
+
+Le bouton radio en haut à droite (ou `R`) ouvre la **Radio du studio** : des ambiances (lofi, jazz, synthwave, funk & soul, électro chill, ambient, hip-hop, rock indé, radios françaises), une sélection de **coups de cœur**, une recherche libre, des favoris, le volume, « Au hasard ». Le bouton son du jeu coupe aussi la radio. En coop, chacun écoute ce qu'il veut ; **Partager au studio** propose ta station aux autres, qui choisissent de l'écouter ou non.
+
+- Les stations viennent de [Radio Browser](https://www.radio-browser.info), une base de données communautaire et gratuite. Les flux appartiennent à leurs diffuseurs.
+- Il faut internet. Rien n'est demandé tant que le panneau n'est pas ouvert, et les listes sont gardées un jour dans le navigateur.
+- Sur la version en ligne (https), seules les stations diffusées en https sont proposées : le navigateur bloque les autres.
+- Une station muette est sautée toute seule au bout de quelques secondes.
 
 ## Pour les curieux
 
@@ -66,6 +76,8 @@ Astuce : si tu ouvres le jeu depuis le fichier `index.html` (sans l'avoir mis en
 - `world.js` : le bureau en 3D (three.js).
 - `ui.js` : l'interface.
 - `net.js` : le multijoueur (PeerJS).
+- `radio.js` : la radio du studio (Radio Browser).
 - `main.js` : la boucle, la caméra, l'avatar.
 - `tests/ui.test.js` : test automatique sans navigateur (`npm i` dans `tests`, puis `node tests/ui.test.js`).
 - `tests/e2e-multi.js` : test multijoueur avec de vrais navigateurs (Edge) et le vrai serveur PeerJS (`node tests/e2e-multi.js`, demande internet).
+- `tests/e2e-radio.js` : test de la radio dans de vrais navigateurs (ambiances, lecture, stations muettes, favoris, partage en coop ; demande internet).

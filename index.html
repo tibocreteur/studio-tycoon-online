@@ -276,6 +276,88 @@ kbd{display:inline-block;background:var(--papier);border:1px solid var(--ligne2)
 .toast .tx{color:var(--encre);font-weight:700;line-height:1.35}
 @keyframes tin{from{opacity:0;transform:translateX(1.2rem)}to{opacity:1;transform:none}}
 
+/* ============ RADIO DU STUDIO ============ */
+#tRadio .rpt{position:absolute;top:.32rem;right:.32rem;width:.45rem;height:.45rem;border-radius:50%;background:var(--sauge);box-shadow:0 0 0 2px var(--papier);display:none}
+#tRadio.joue .rpt{display:block;animation:rpouls 1.4s ease-in-out infinite}
+@keyframes rpouls{50%{transform:scale(.55);opacity:.55}}
+#radio{position:absolute;right:var(--gx);top:var(--top);width:min(23rem,calc(100vw - 2*var(--gx)));max-height:calc(100% - var(--top) - var(--gx));
+  border-radius:1.3rem;display:flex;flex-direction:column;overflow:hidden;z-index:6;
+  opacity:0;transform:translateX(.8rem);pointer-events:none;visibility:hidden;transition:opacity .2s,transform .2s,visibility .2s}
+#radio.on{opacity:1;transform:none;pointer-events:auto;visibility:visible}
+#hud.radio-ouverte .droite{right:calc(var(--gx) + min(23rem,calc(100vw - 2*var(--gx))) + .6rem)}
+.rph{display:flex;align-items:center;gap:.6rem;padding:.7rem .7rem .65rem 1rem;border-bottom:1px solid var(--ligne);flex:0 0 auto}
+.rph .rti{width:2.1rem;height:2.1rem;border-radius:.7rem;background:var(--navy);color:var(--miel2);display:grid;place-items:center;flex:0 0 auto}
+.rtt{flex:1;min-width:0}
+.rtt h2{font:700 1.15rem/1.1 var(--f-titre)}
+.rtt small{display:block;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);margin-top:.12rem}
+.rph [data-lbl]:hover::after{top:calc(100% + .4rem);right:0}
+.rnow{display:flex;align-items:center;gap:.75rem;margin:.75rem .85rem 0;padding:.7rem .75rem;border-radius:var(--r2);background:var(--papier);border:1px solid var(--ligne);flex:0 0 auto}
+.rlogo{width:2.3rem;height:2.3rem;border-radius:.65rem;flex:0 0 auto;overflow:hidden;background:var(--papier2);display:grid;place-items:center;
+  font:800 1rem/1 var(--f-titre);color:#fff7e8;box-shadow:inset 0 -2px 0 rgba(0,0,0,.08)}
+.rlogo img{width:100%;height:100%;object-fit:cover;display:block}
+.rlogo.grand{width:3.1rem;height:3.1rem;border-radius:.85rem;font-size:1.35rem}
+.rnt{flex:1;min-width:0}
+.rnt b{display:block;font:700 1rem/1.2 var(--f-ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rnt small{display:block;font-size:.76rem;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.retat{display:inline-flex;align-items:center;gap:.3rem;margin-top:.25rem;font:800 .64rem/1 var(--f-ui);letter-spacing:.09em;text-transform:uppercase;color:var(--mut)}
+.retat::before{content:"";width:.42rem;height:.42rem;border-radius:50%;background:var(--dim)}
+.retat.lecture{color:var(--ok)} .retat.lecture::before{background:var(--corail);animation:rpouls 1.4s ease-in-out infinite}
+.retat.chargement{color:var(--warn)} .retat.chargement::before{background:var(--miel)}
+.retat.erreur{color:var(--bad)} .retat.erreur::before{background:var(--terra)}
+.eq{display:inline-flex;align-items:flex-end;gap:2px;height:1.15rem;flex:0 0 auto}
+.eq i{width:3px;height:100%;border-radius:2px;background:var(--sauge);transform-origin:bottom;animation:req .9s ease-in-out infinite}
+.eq i:nth-child(2){animation-duration:.7s;animation-delay:-.2s;background:var(--miel)}
+.eq i:nth-child(3){animation-duration:1.1s;animation-delay:-.5s;background:var(--corail)}
+.eq i:nth-child(4){animation-duration:.8s;animation-delay:-.35s}
+.eq.stop i{animation:none;transform:scaleY(.22)}
+@keyframes req{0%,100%{transform:scaleY(.25)}50%{transform:scaleY(1)}}
+.rctl{display:flex;align-items:center;justify-content:center;gap:.2rem;padding:.55rem .6rem .1rem;flex:0 0 auto}
+.rctl [data-lbl]:hover::after{bottom:calc(100% + .35rem);left:50%;transform:translateX(-50%)}
+.rctl .ib.on{background:var(--miel2);color:#7a4d06}
+.rctl .ib.on svg{fill:currentColor}
+.rctl .ib:disabled{opacity:.35}
+.rplay{width:2.9rem;height:2.9rem;border-radius:50%;background:var(--navy);color:#fff7e8;display:grid;place-items:center;margin:0 .35rem;box-shadow:var(--ombre2);transition:transform .1s,background .15s}
+.rplay:hover{background:#33476a}
+.rplay:active{transform:scale(.94)}
+.rplay svg{fill:currentColor;stroke:none;width:1.25rem;height:1.25rem}
+.rvol{display:flex;align-items:center;gap:.55rem;padding:.35rem 1rem .1rem;color:var(--encre2);flex:0 0 auto}
+.rvol input{flex:1;accent-color:var(--miel);min-width:0}
+.rvol b{font:800 .72rem/1 var(--f-ui);color:var(--mut);width:2.6rem;text-align:right}
+.rchips{display:flex;flex-wrap:wrap;gap:.3rem;padding:.6rem .85rem .2rem;flex:0 0 auto}
+.rchip{font:800 .72rem/1 var(--f-ui);padding:.42rem .6rem;border-radius:1rem;background:var(--papier2);border:1px solid var(--ligne);color:var(--encre2);transition:background .15s,color .15s}
+.rchip:hover{background:var(--papier3);color:var(--encre)}
+.rchip.on{background:var(--navy);border-color:var(--navy);color:#fff7e8}
+.rchip[data-k="coeur"]{border-color:rgba(238,124,105,.45)}
+.rchip[data-k="favs"]{border-color:rgba(229,161,54,.5)}
+.rcherche{display:flex;align-items:center;gap:.45rem;margin:.45rem .85rem .35rem;padding:.4rem .65rem;border-radius:.7rem;border:1px solid var(--ligne2);background:var(--papier);color:var(--mut);flex:0 0 auto}
+.rcherche:focus-within{border-color:var(--miel);box-shadow:0 0 0 3px rgba(229,161,54,.2)}
+.rcherche input{flex:1;min-width:0;border:0;outline:0;background:transparent;font-weight:700;font-size:.86rem;color:var(--encre)}
+.rliste{flex:1 1 auto;min-height:5rem;overflow-y:auto;padding:.15rem .55rem .4rem;display:flex;flex-direction:column;gap:.1rem;overscroll-behavior:contain}
+.rliste.attente{opacity:.5}
+.rst{display:flex;align-items:center;gap:.6rem;padding:.42rem .45rem;border-radius:.7rem;cursor:pointer;transition:background .12s;outline-offset:-2px}
+.rst:hover{background:var(--papier2)}
+.rst.on{background:var(--sauge2)}
+.rst .rtx{flex:1;min-width:0}
+.rst .rtx b{display:block;font-size:.86rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rst .rtx small{display:block;font-size:.72rem;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rst .eq.mini{height:.8rem;display:none}
+.rst.joue .eq.mini{display:inline-flex}
+.rfav{width:1.9rem;height:1.9rem;border-radius:.55rem;display:grid;place-items:center;color:var(--dim);flex:0 0 auto}
+.rfav:hover{color:var(--miel);background:var(--papier)}
+.rfav.on{color:var(--miel)}
+.rfav.on svg{fill:currentColor}
+.rvide{display:none;color:var(--mut);font-size:.86rem;text-align:center;padding:1.2rem 1rem;line-height:1.6}
+.rvide.on{display:block}
+.rsrc{font-size:.68rem;color:var(--mut);padding:.5rem 1rem .7rem;border-top:1px solid var(--ligne);line-height:1.45;flex:0 0 auto}
+.rsrc a{color:var(--encre2)}
+#radioPill{display:none;align-items:center;gap:.55rem;padding:.32rem .35rem .32rem .75rem;border-radius:1rem;max-width:100%;cursor:pointer;animation:tin .3s ease}
+#radioPill.on{display:flex}
+#radioPill .rpn{font-size:.82rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:13rem}
+#radioPill .rpb{width:1.8rem;height:1.8rem;border-radius:50%;background:var(--navy);color:#fff7e8;display:grid;place-items:center;flex:0 0 auto}
+#radioPill .rpb svg{fill:currentColor;stroke:none;width:.85rem;height:.85rem}
+.toast .tact{margin-top:.45rem;font:800 .76rem/1 var(--f-ui);background:var(--navy);color:#fff7e8;padding:.42rem .7rem;border-radius:.55rem}
+.toast .tact:hover{background:#33476a}
+
 /* bas droite : inspection + aide-mémoire */
 .basdroite{position:absolute;right:var(--gx);bottom:var(--gx);display:flex;flex-direction:column;gap:.55rem;align-items:flex-end;pointer-events:none}
 .basdroite > *{pointer-events:auto}
@@ -359,6 +441,8 @@ kbd{display:inline-block;background:var(--papier);border:1px solid var(--ligne2)
   #panneau.large .pb{flex-direction:column;overflow-y:auto}
   .hint{display:none}
   .basdroite{bottom:4.6rem}
+  #radio{left:var(--gx);right:var(--gx);width:auto;bottom:4.6rem;max-height:none}
+  #hud.radio-ouverte .droite{right:var(--gx);z-index:7}
   #menu{padding:1rem;justify-content:center;background:rgba(246,238,224,.82)}
 }
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
@@ -390,6 +474,7 @@ kbd{display:inline-block;background:var(--papier);border:1px solid var(--ligne2)
     </div>
     <div class="groupe verre">
       <button class="ib" id="tCam" data-do="camera" data-lbl="Changer de vue (V)"></button>
+      <button class="ib" id="tRadio" data-radio="basculer" data-lbl="Radio du studio (R)" aria-label="Radio du studio"></button>
       <button class="ib" id="tSon" data-do="son" data-lbl="Son"></button>
       <button class="ib" id="tMenu" data-do="menu" data-lbl="Menu principal"></button>
     </div>
@@ -409,7 +494,10 @@ kbd{display:inline-block;background:var(--papier);border:1px solid var(--ligne2)
     <div class="pb" id="pb"></div>
   </aside>
 
+  <section id="radio" class="verre" aria-label="Radio du studio"></section>
+
   <div class="droite">
+    <div id="radioPill" class="verre" role="button" aria-label="Radio en cours, ouvrir le panneau"></div>
     <div id="joueurs" class="verre"></div>
     <div id="toasts"></div>
   </div>
@@ -419,7 +507,7 @@ kbd{display:inline-block;background:var(--papier);border:1px solid var(--ligne2)
     <div class="hint" id="hint">
       <b>Clic</b> sur le sol : marcher · <b>ZQSD</b> ou flèches<br>
       <b>Glisser</b> : pivoter · <b>Molette</b> : zoom · <b>Clic droit</b> : décaler<br>
-      <b>Clic</b> sur un collaborateur : l'inspecter · <b>E</b> : tableau de bord
+      <b>Clic</b> sur un collaborateur : l'inspecter · <b>E</b> : tableau de bord · <b>R</b> : radio
     </div>
   </div>
 </div>
@@ -464,6 +552,8 @@ kbd{display:inline-block;background:var(--papier);border:1px solid var(--ligne2)
 <script src="world.js"></script>
 <script src="net.js"></script>
 <script src="ui.js"></script>
+<!-- radio du studio (facultative, cosmétique) : stations de Radio Browser -->
+<script src="radio.js"></script>
 <script src="main.js"></script>
 </body>
 </html>

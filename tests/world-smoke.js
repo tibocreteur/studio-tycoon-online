@@ -107,5 +107,17 @@ r("newGame(2); World.construire();"); boucle(20,1/60);
 ok(r("World.dimensions().nom")==="Coin du salon","nouvelle partie : retour au coin du salon");
 const c0=compter(); console.log("   niveau 0 après nouvelle partie : ~"+c0.dessins+" dessins");
 
+/* radio du studio : poste rétro au niveau 0, platine ensuite, notes quand ça joue */
+ok(r("World.etatMusique.poste")===true,"niveau 0 : poste de radio présent");
+r("World.musique(true)"); boucle(90,1/60);
+console.log("   musique : "+r("JSON.stringify(World.etatMusique)"));
+ok(r("World.etatMusique.on&&World.etatMusique.notes&&World.etatMusique.vitesse>1"),"World.musique(true) : notes visibles, ça tourne");
+ok(nanDansScene()===0,"musique : aucune position NaN");
+r("S.up.bureau=2; World.construire(); World.musique(true)"); boucle(90,1/60);
+const rot0=r("World.etatMusique.rotation"); boucle(30,1/60);
+ok(r("World.etatMusique.platine")&&r("World.etatMusique.rotation")!==rot0,"niveau 2 : la platine tourne pendant la musique");
+r("World.musique(false)"); boucle(240,1/60);
+const rot1=r("World.etatMusique.rotation"); boucle(30,1/60);
+ok(!r("World.etatMusique.notes")&&r("World.etatMusique.rotation")===rot1,"World.musique(false) : platine arrêtée, notes parties");
 console.log(erreurs?("\n"+erreurs+" échec(s)"):"\nTout est bon.");
 process.exit(erreurs?1:0);

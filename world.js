@@ -63,6 +63,8 @@ let persos=new Map();             /* id designer -> perso */
 let avatars=new Map();            /* id joueur -> avatar */
 let confettis=[];
 let chat=null, poussiere=null, platine=null;
+let radioProp=null, notes=null, musiqueOn=false, vitPlatine=0;   /* radio du studio (cosmétique) */
+const srcMusique=new THREE.Vector3(0,1,0);
 let ombresDyn=null;
 let horloge=0, tCles=0, tEcrans=0, curseurEcran=0;
 let survol=null;
@@ -1249,7 +1251,7 @@ function moodboard(C,A,cx){
    ===================================================================== */
 let matLivres=null;
 function batirDeco(){
-  vider(gDeco); platine=null;
+  vider(gDeco); platine=null; radioProp=null;
   const w=sal.w,d=sal.d, cafe=clamp(up("cafe"),0,4), mat=clamp(up("materiel"),0,4), prest=clamp(up("prestige"),0,4);
   const A=new Atlas(1024,1024);
   const matA=new THREE.MeshStandardMaterial({roughness:.85,metalness:0});
@@ -1470,6 +1472,13 @@ function meubleNord(C,A){
   [[-.44,-.16],[.44,-.16],[-.44,.16],[.44,.16]].forEach(([x,z])=>C.cy("vc",.02,.014,.08,PAL.noyer,x,.04,z,0,6));
   const y=.66;
   if(niveau===0){
+    /* petit poste de radio rétro : il bat la mesure quand la radio du studio joue */
+    radioProp=piece(P=>{ P.rb("vc",.17,.1,.07,.016,PAL.terre,0,.05,0);
+      P.cy("vc",.031,.031,.006,PAL.gris4,-.036,.05,.036,[Math.PI/2,0,0],14);
+      P.bx("vc",.055,.026,.004,PAL.creme,.042,.066,.036); P.cy("vc",.009,.009,.01,PAL.moutarde,.042,.031,.038,[Math.PI/2,0,0],8);
+      P.tige("vc",.055,.098,-.012,.1,.22,-.03,.0025,PAL.gris3,4); });
+    radioProp.position.set(x0-.4,y,z0+.02); radioProp.castShadow=true; gDeco.add(radioProp);
+    srcMusique.set(x0-.4,y+.12,z0+.02);
     console_(C,-.15,y,.02,.2);
     for(let k=0;k<3;k++) C.rb("vc",.2,.035,.11,.004,PAL.noir,.28,y+.018+k*.036,0,(k-1)*.12);
     cassette(C,.05,y,.12,.5);
@@ -1478,6 +1487,7 @@ function meubleNord(C,A){
     platine=piece(P=>{ P.add("vc",G.cyl(.15,.15,.012,28),PAL.noir,0,0,0); P.add("vc",G.cyl(.05,.05,.014,16),PAL.terre,0,0,0);
       P.add("vc",G.tore(.11,.002,Math.PI*2,3,28),PAL.gris5,0,.007,0,[Math.PI/2,0,0]); });
     platine.position.set(x0-.13,y+.077,z0); gDeco.add(platine);
+    srcMusique.set(x0-.13,y+.12,z0);
     C.tige("brill",.1,y+.09,.12,-.02,y+.085,-.02,.005,PAL.gris3,5);
     [-.42,.32].forEach(x=>{ C.rb("vc",.17,.3,.2,.02,PAL.encre,x+(x<0?0:.08),y+.15,0);
       C.cy("vc",.05,.05,.01,PAL.gris5,x+(x<0?0:.08),y+.19,.1,[Math.PI/2,0,0],14); C.cy("vc",.025,.025,.01,PAL.gris5,x+(x<0?0:.08),y+.08,.1,[Math.PI/2,0,0],10); });
@@ -2051,6 +2061,54 @@ function majConfettis(dt){
     if(c.vie>3.6){ racine.remove(c.pts); c.pts.geometry.dispose(); c.pts.material.dispose(); confettis.splice(i,1); }
   }
 }
+/* ---------- radio du studio : platine qui tourne, poste qui pulse, quelques notes ----------
+   Un seul nuage de points (1 appel de dessin), créé à la première écoute. */
+const NB_NOTES=7;
+function creerNotes(){
+  const cv=toile(64,64), c=cv.getContext("2d");
+  c.fillStyle="#ffffff"; c.font="700 50px Georgia,serif"; c.textAlign="center"; c.textBaseline="middle";
+  c.fillText("♪",32,34);
+  const tex=texDe(cv);
+  const geo=new THREE.BufferGeometry(), pos=new Float32Array(NB_NOTES*3), col=new Float32Array(NB_NOTES*4);
+  geo.setAttribute("position",new THREE.BufferAttribute(pos,3));
+  geo.setAttribute("color",new THREE.BufferAttribute(col,4));
+  const pts=new THREE.Points(geo,new THREE.PointsMaterial({size:.16,map:tex,vertexColors:true,transparent:true,depthWrite:false,alphaTest:.02}));
+  const teintes=[PAL.corail,PAL.moutarde,PAL.encreClair,PAL.saugeFonce];
+  pts.userData.vie=[]; pts.userData.teinte=[];
+  for(let i=0;i<NB_NOTES;i++){ pts.userData.vie.push(i/NB_NOTES); pts.userData.teinte.push(lin(teintes[i%teintes.length])); }
+  pts.frustumCulled=false; pts.renderOrder=3; pts.visible=false;
+  gVie.add(pts);
+  return pts;
+}
+function majMusique(dt){
+  vitPlatine+=((musiqueOn?3.4:0)-vitPlatine)*Math.min(1,dt*2.2);
+  if(platine&&vitPlatine>.001) platine.rotation.y-=dt*vitPlatine;
+  if(radioProp){
+    const b=musiqueOn?Math.pow(Math.max(0,Math.sin(horloge*7.6)),3)*.06:0;
+    radioProp.scale.set(1+b*.6,1+b,1+b*.6);
+  }
+  if(!notes) return;
+  const ud=notes.userData, a=notes.geometry.attributes, P=a.position.array, C=a.color.array;
+  ud.force=clamp((ud.force||0)+(musiqueOn?dt*1.5:-dt*1.2),0,1);
+  notes.visible=ud.force>0;
+  if(!notes.visible) return;
+  for(let i=0;i<NB_NOTES;i++){
+    let v=ud.vie[i]+dt/2.6; if(v>=1) v-=1; ud.vie[i]=v;
+    const ph=i*1.7;
+    P[i*3]=srcMusique.x+Math.sin(v*5+ph)*.12+(i%2?.05:-.05);
+    P[i*3+1]=srcMusique.y+v*.85;
+    P[i*3+2]=srcMusique.z+.08+v*.25;
+    const t=ud.teinte[i], al=Math.sin(v*Math.PI)*ud.force;
+    C[i*4]=t.r; C[i*4+1]=t.g; C[i*4+2]=t.b; C[i*4+3]=al;
+  }
+  a.position.needsUpdate=true; a.color.needsUpdate=true;
+}
+function musique(on){
+  musiqueOn=!!on;
+  if(musiqueOn&&!notes&&scene) notes=creerNotes();
+  return musiqueOn;
+}
+
 /* ombres de contact des acteurs mobiles, en un seul dessin instancié */
 const _qPlat=new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI/2,0,0));
 function ombreA(i,x,z,s){ _v.set(x,.011,z); _s.set(s,s,1); _m4.compose(_v,_qPlat,_s); ombresDyn.setMatrixAt(i,_m4); }
@@ -2077,7 +2135,7 @@ function update(dt,dtReel){
   majConfettis(dtReel);
   majChat(dt);
   majPoussiere(dtReel);
-  if(platine) platine.rotation.y-=dtReel*3.4;
+  majMusique(dtReel);
   majOmbresDyn();
 }
 function rendu(){ majCoupe(); renderer.render(scene,camera); }
@@ -2111,12 +2169,14 @@ function infos(){
 }
 
 API={init,construire,update,rendu,taille,viser,surligner,ecranDe,celebrer,dimensions,
-  majAvatars,solA,bornes,infos,
+  majAvatars,solA,bornes,infos,musique,
   idAvatarLocal:null,
   get camera(){return camera}, get renderer(){return renderer}, get scene(){return scene},
   get nomSalle(){ return SALLES[clamp((typeof S!=="undefined"&&S&&S.up&&S.up.bureau)|0,0,SALLES.length-1)].nom; },
   /* facteur de luminosité lissé, 0 = nuit noire, 1 = plein soleil */
-  get lumiere(){return jourLisse}};
+  get lumiere(){return jourLisse},
+  /* radio du studio : état visuel (pour les tests) */
+  get etatMusique(){ return {on:musiqueOn,vitesse:vitPlatine,platine:!!platine,poste:!!radioProp,notes:!!(notes&&notes.visible),rotation:platine?platine.rotation.y:0,echelle:radioProp?radioProp.scale.y:1}; }};
 return API;
 })();
 if(typeof window!=="undefined") window.World=World;

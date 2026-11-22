@@ -179,11 +179,14 @@ function bip(f,dur,type){
    NOTIFICATIONS (plafonnées, fusionnées à grande vitesse)
    ===================================================================== */
 const ICO_TOAST={g:"ok",r:"alerte",y:"alerte",a:"etoile","":"info"};
-function toast(titre,txt,c){
+/* act (facultatif) : {t:"Libellé", f:fonction} ajoute un bouton d'action au toast */
+function toast(titre,txt,c,act){
   const box=$("toasts"); if(!box) return;
   titre=String(titre||""); txt=String(txt||""); c=c||"";
+  if(act&&(typeof act.f!=="function"||!act.t)) act=null;
   const now=performance.now();
-  for(const el of box.children){
+  if(!act) for(const el of box.children){
+    if(el._act) continue;
     if(el._titre===titre&&!el._sortie&&now-el._t<6000){
       el._n++; el._t=now;
       el.querySelector(".tx").textContent=txt;
@@ -195,12 +198,17 @@ function toast(titre,txt,c){
   }
   while(box.children.length>=4){ const v=box.firstChild; clearTimeout(v._to); v.remove(); }
   const el=document.createElement("div");
-  el.className="toast "+c; el._titre=titre; el._t=now; el._n=1;
-  el.innerHTML='<span class="ti">'+ico(ICO_TOAST[c]||"info")+'</span><div><b>'+esc(titre)+'<em style="display:none"></em></b><div class="tx"></div></div>';
+  el.className="toast "+c; el._titre=titre; el._t=now; el._n=1; el._act=!!act;
+  el.innerHTML='<span class="ti">'+ico(ICO_TOAST[c]||"info")+'</span><div><b>'+esc(titre)+'<em style="display:none"></em></b><div class="tx"></div>'
+    +(act?'<button class="tact" type="button"></button>':'')+'</div>';
   el.querySelector(".tx").textContent=txt;
+  if(act){
+    const b=el.querySelector(".tact"); b.textContent=String(act.t);
+    b.addEventListener("click",e=>{ e.stopPropagation(); try{ act.f(); }catch(err){ console.error(err); } sortie(el); });
+  }
   el.addEventListener("click",()=>sortie(el));
   box.appendChild(el);
-  el._to=setTimeout(()=>sortie(el),4200);
+  el._to=setTimeout(()=>sortie(el),act?9000:4200);
 }
 function sortie(el){
   if(el._sortie) return; el._sortie=true; clearTimeout(el._to);
@@ -593,7 +601,7 @@ function vueAide(){
     +'<h4>En coop</h4>Tout le monde gère le même studio : chaque clic part chez l\'hôte, qui fait tourner la partie. '
     +'La vitesse et la pause sont communes. Ton avatar se promène dans le bureau, les autres le voient.'
     +'<h4>Commandes</h4><kbd>E</kbd> tableau de bord · <kbd>Échap</kbd> fermer · <kbd>Espace</kbd> pause · '
-    +'<kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> vitesse normale, ×2, ×4 · <kbd>V</kbd> changer de vue · <kbd>Ctrl</kbd>+<kbd>S</kbd> sauvegarder<br>'
+    +'<kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> vitesse normale, ×2, ×4 · <kbd>V</kbd> changer de vue · <kbd>R</kbd> radio du studio · <kbd>Ctrl</kbd>+<kbd>S</kbd> sauvegarder<br>'
     +'Clic sur le sol pour marcher, ou <kbd>Z</kbd> <kbd>Q</kbd> <kbd>S</kbd> <kbd>D</kbd> (<kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd>) et les flèches. '
     +'Glisser pour pivoter, molette pour zoomer, clic droit pour décaler. Clic sur un collaborateur pour ouvrir sa fiche.'
     +'</div>';
@@ -985,7 +993,7 @@ const ACTIONS={
   fermerPanneau:()=>fermerPanneau(),
   fermerModal:()=>fermerModal(),
   camera:()=>{ if(window.Jeu&&Jeu.vueSuivante) Jeu.vueSuivante(); },
-  son:()=>{ prefs.son=!prefs.son; sauverPrefs(); majSon(); if(prefs.son) bip(660,.08,"triangle"); dirty=true; },
+  son:()=>{ prefs.son=!prefs.son; sauverPrefs(); majSon(); if(prefs.son) bip(660,.08,"triangle"); if(window.Radio&&Radio.majSon) Radio.majSon(); dirty=true; },
   echelle:id=>{ prefs.echelle=+id||1; sauverPrefs(); appliquerEchelle(); dirty=true; },
   pauseModale:()=>{ prefs.pauseModale=!prefs.pauseModale; sauverPrefs(); dirty=true; },
   sauver:()=>sauverPartie(),
